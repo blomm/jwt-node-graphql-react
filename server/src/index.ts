@@ -1,5 +1,6 @@
 import 'reflect-metadata'
-import express from 'express'
+import 'dotenv/config'
+import express, { Request, Response } from 'express'
 import { ApolloServer } from 'apollo-server-express'
 import {
   GraphQLSchema,
@@ -12,9 +13,14 @@ import {
 import { createConnection } from 'typeorm'
 
 import { hash, compare } from 'bcryptjs'
-import { sign } from 'jsonwebtoken'
 
 import { User } from './entity/User'
+import { createAuthToken, createRefreshToken } from './auth'
+
+interface MyContext {
+  req: Request
+  res: Response
+}
 ;(async () => {
   // create express app
   const app = express()
@@ -83,7 +89,7 @@ import { User } from './entity/User'
               email: { type: GraphQLString },
               password: { type: GraphQLString },
             },
-            async resolve(_parent, args) {
+            async resolve(_parent, args, context: MyContext) {
               const user = await User.findOne({ email: args.email })
               if (!user) {
                 return new Error('Could not find account')
@@ -92,16 +98,20 @@ import { User } from './entity/User'
               if (!valid) {
                 return new Error('Invalid password')
               }
+
+              context.res.cookie('jid', createRefreshToken(user), {
+                httpOnly: true,
+              })
               return {
-                accessToken: sign({ userId: user.id }, 'fdkjhfksdhjf', {
-                  expiresIn: 60,
-                }),
+                accessToken: createAuthToken(user),
               }
             },
           },
         },
       }),
     }),
+    // The context argument is useful for passing things that any resolver might need
+    context: ({ req, res }: MyContext) => ({ req, res }),
   })
 
   apolloServer.applyMiddleware({ app })
