@@ -16,10 +16,12 @@ import { hash, compare } from 'bcryptjs'
 
 import { User } from './entity/User'
 import { createAuthToken, createRefreshToken } from './auth'
+import { verify } from 'jsonwebtoken'
 
 interface MyContext {
   req: Request
   res: Response
+  payload: any
 }
 ;(async () => {
   // create express app
@@ -51,13 +53,15 @@ interface MyContext {
         fields: {
           hello: {
             type: GraphQLString,
-            resolve(_parent, _args) {
+            resolve(_parent, _args, context) {
+              if (!context.payload) throw new Error('you must be logged in')
               return 'hi there'
             },
           },
           users: {
             type: new GraphQLList(userType),
-            resolve(_parent, _args) {
+            resolve(_parent, _args, context) {
+              if (!context.payload) throw new Error('you must be logged in')
               return User.find({})
             },
           },
@@ -111,7 +115,14 @@ interface MyContext {
       }),
     }),
     // The context argument is useful for passing things that any resolver might need
-    context: ({ req, res }: MyContext) => ({ req, res }),
+    context: ({ req, res }: MyContext) => {
+      if (!req.headers.authorization) return { req, res }
+      const token = req.headers.authorization || ''
+      // if token expired, error will be thrown from inside verify
+      const payload = verify(token, process.env.ACCESS_SECRET!)
+      if (!payload) throw new Error('unable to verify token')
+      return { req, res, payload }
+    },
   })
 
   apolloServer.applyMiddleware({ app })
@@ -123,21 +134,3 @@ interface MyContext {
     console.log('express server started')
   })
 })()
-
-// createConnection().then(async connection => {
-
-//     console.log("Inserting a new user into the database...");
-//     const user = new User();
-//     user.firstName = "Timber";
-//     user.lastName = "Saw";
-//     user.age = 25;
-//     await connection.manager.save(user);
-//     console.log("Saved a new user with id: " + user.id);
-
-//     console.log("Loading users from the database...");
-//     const users = await connection.manager.find(User);
-//     console.log("Loaded users: ", users);
-
-//     console.log("Here you can setup and run express/koa/any other framework.");
-
-// }).catch(error => console.log(error));
