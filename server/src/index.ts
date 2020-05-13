@@ -16,7 +16,7 @@ import cookieParser from 'cookie-parser'
 import { hash, compare } from 'bcryptjs'
 
 import { User } from './entity/User'
-import { createAuthToken, createRefreshToken } from './auth'
+import { createAuthToken, attachRefreshToken } from './auth'
 import { verify } from 'jsonwebtoken'
 
 interface MyContext {
@@ -24,6 +24,7 @@ interface MyContext {
   res: Response
   payload: any
 }
+
 ;(async () => {
   // create express app
   const app = express()
@@ -41,6 +42,12 @@ interface MyContext {
     }
     const user = await User.findOne({ id: payload.userId })
     if (!user) return res.send({ ok: false, accessToken: '' })
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      console.log('refresh token has been invalidated')
+      return res.send({ ok: false, accessToken: '' })
+    }
+    attachRefreshToken(res, user)
 
     return res.send({ ok: true, accessToken: createAuthToken(user) })
   })
@@ -125,9 +132,8 @@ interface MyContext {
                 return new Error('Invalid password')
               }
 
-              context.res.cookie('jid', createRefreshToken(user), {
-                httpOnly: true,
-              })
+              attachRefreshToken(context.res, user)
+
               return {
                 accessToken: createAuthToken(user),
               }
