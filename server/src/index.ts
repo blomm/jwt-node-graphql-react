@@ -11,6 +11,7 @@ import {
   GraphQLInt,
 } from 'graphql'
 import { createConnection } from 'typeorm'
+import cookieParser from 'cookie-parser'
 
 import { hash, compare } from 'bcryptjs'
 
@@ -26,6 +27,27 @@ interface MyContext {
 ;(async () => {
   // create express app
   const app = express()
+  app.use(cookieParser())
+
+  app.post('/refresh-token', async (req, res) => {
+    const token = req.cookies.jid
+    if (!token) return res.send({ ok: false, accessToken: '' })
+    let payload: any
+    try {
+      payload = verify(token, process.env.REFRESH_SECRET!)
+    } catch (error) {
+      console.log(error)
+      return res.send({ ok: false, accessToken: '' })
+    }
+    const user = await User.findOne({ id: payload.userId })
+    if (!user) return res.send({ ok: false, accessToken: '' })
+
+    return res.send({ ok: true, accessToken: createAuthToken(user) })
+  })
+  app.listen(4000, () => {
+    console.log('express server started')
+  })
+
   // create db connection
   await createConnection()
 
@@ -117,7 +139,7 @@ interface MyContext {
     // The context argument is useful for passing things that any resolver might need
     context: ({ req, res }: MyContext) => {
       if (!req.headers.authorization) return { req, res }
-      const token = req.headers.authorization || ''
+      const token = req.headers['authorization'] || ''
       // if token expired, error will be thrown from inside verify
       const payload = verify(token, process.env.ACCESS_SECRET!)
       if (!payload) throw new Error('unable to verify token')
@@ -126,11 +148,4 @@ interface MyContext {
   })
 
   apolloServer.applyMiddleware({ app })
-
-  app.get('/', (_req, res) => {
-    res.send('hello')
-  })
-  app.listen(4000, () => {
-    console.log('express server started')
-  })
 })()

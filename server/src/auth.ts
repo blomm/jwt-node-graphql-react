@@ -8,7 +8,7 @@ export const createAuthToken = (user: User) => {
 }
 
 export const createRefreshToken = (user: User) => {
-  sign({ userId: user.id }, process.env.REFRESH_SECRET!, {
+  return sign({ userId: user.id }, process.env.REFRESH_SECRET!, {
     expiresIn: '7d',
   })
 }
