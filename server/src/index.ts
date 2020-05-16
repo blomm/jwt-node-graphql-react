@@ -29,6 +29,7 @@ interface MyContext {
   // create express app
   const app = express()
   app.use(cookieParser())
+  //app.use(cors())
 
   app.post('/refresh-token', async (req, res) => {
     const token = req.cookies.jid
@@ -56,6 +57,9 @@ interface MyContext {
   })
 
   // create db connection
+  // if we had multiple connections, then we would pass in connectionOptions:
+  // const connectionOptions = await getConnectionOptions("second-connection");
+
   await createConnection()
 
   const tokenType = new GraphQLObjectType({
@@ -82,8 +86,8 @@ interface MyContext {
         fields: {
           hello: {
             type: GraphQLString,
-            resolve(_parent, _args, context) {
-              if (!context.payload) throw new Error('you must be logged in')
+            resolve(_parent, _args, _context) {
+              //if (!context.payload) throw new Error('you must be logged in')
               return 'hi there'
             },
           },
@@ -153,5 +157,10 @@ interface MyContext {
     },
   })
 
-  apolloServer.applyMiddleware({ app })
+  const corsOptions = {
+    origin: '*',
+    credentials: false,
+  }
+
+  apolloServer.applyMiddleware({ app, cors: corsOptions })
 })()
