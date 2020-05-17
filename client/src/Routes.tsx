@@ -1,25 +1,32 @@
 import React from 'react'
-import { useHelloQuery } from './generated/graphql'
-
+import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom'
+import { Register } from './pages/Register'
+import { Home } from './pages/Home'
+import { Login } from './pages/Login'
 export const Routes: React.FC = () => {
-  //const { loading, data } = useQuery(hello)
-
-  const { data, loading, error } = useHelloQuery({
-    variables: {},
-  })
-
-  if (error) return <p>Error :-(</p>
-
-  if (loading) return <p>Loading...</p>
-
   return (
-    <>
-      <div>{JSON.stringify(data)}</div>
-      {/* <ul>
-        {data.users.map((d: any) => (
-          <li>d.email</li>
-        ))}
-      </ul> */}
-    </>
+    <Router>
+      <header>
+        <div>
+          <Link to="/">Home</Link>
+        </div>
+        <div>
+          <Link to="/register">Register</Link>
+        </div>
+        <div>
+          <Link to="/login">Login</Link>
+        </div>
+      </header>
+
+      <Switch>
+        <Route exact path="/" component={Home} />
+
+        <Route path="/register" component={Register} />
+
+        <Route path="/login" component={Login} />
+      </Switch>
+    </Router>
+    //   <div>{JSON.stringify(data)}</div>
+    // </>
   )
 }

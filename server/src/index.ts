@@ -157,9 +157,10 @@ interface MyContext {
     },
   })
 
+  // we could set cors here, or we could set with app.use(cors({....}))
   const corsOptions = {
-    origin: '*',
-    credentials: false,
+    credentials: true,
+    origin: 'http://localhost:3000',
   }
 
   apolloServer.applyMiddleware({ app, cors: corsOptions })
