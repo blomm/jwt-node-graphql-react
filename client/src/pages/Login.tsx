@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useLoginMutation } from '../generated/graphql'
+import { useLoginMutation, MeDocument, MeQuery } from '../generated/graphql'
 import { useHistory } from 'react-router-dom'
 import { setAccessToken } from '../accessToken'
 
@@ -20,6 +20,18 @@ export const Login: React.FC<Props> = () => {
           variables: {
             email,
             password,
+          },
+          update: (store, { data }) => {
+            if (!data) {
+              return null
+            }
+            store.writeQuery<MeQuery>({
+              query: MeDocument,
+              data: {
+                __typename: 'Root',
+                me: data?.login?.user,
+              },
+            })
           },
         })
         if (resp && resp.data) {

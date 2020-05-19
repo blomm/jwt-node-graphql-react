@@ -63,13 +63,6 @@ interface MyContext {
 
   await createConnection()
 
-  const tokenType = new GraphQLObjectType({
-    name: 'token',
-    fields: {
-      accessToken: { type: GraphQLString },
-    },
-  })
-
   const userType = new GraphQLObjectType({
     name: 'user',
     fields: () => ({
@@ -77,6 +70,14 @@ interface MyContext {
       email: { type: GraphQLString },
       //password: { type: GraphQLString },
     }),
+  })
+
+  const tokenType = new GraphQLObjectType({
+    name: 'token',
+    fields: {
+      accessToken: { type: GraphQLString },
+      user: { type: userType },
+    },
   })
 
   // create apollo connection
@@ -95,8 +96,17 @@ interface MyContext {
           users: {
             type: new GraphQLList(userType),
             resolve(_parent, _args, context) {
-              if (!context.payload) throw new Error('you must be logged in')
+              if (!context.payload)
+                throw new Error('you must be logged in to query for users')
               return User.find({})
+            },
+          },
+          me: {
+            type: userType,
+            resolve(_parent, _args, context: MyContext) {
+              if (!context.payload)
+                throw new Error('you must be logged in to query ME')
+              return User.findOne({ id: context.payload.userId })
             },
           },
         },
@@ -121,6 +131,13 @@ interface MyContext {
               return true
             },
           },
+          logout: {
+            type: GraphQLBoolean,
+            resolve: (_parent, _args, context: MyContext) => {
+              context.res.clearCookie('jid')
+              return true
+            },
+          },
           login: {
             type: tokenType,
             args: {
@@ -141,6 +158,7 @@ interface MyContext {
 
               return {
                 accessToken: createAuthToken(user),
+                user: { id: user.id, email: user.email },
               }
             },
           },

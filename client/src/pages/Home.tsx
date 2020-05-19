@@ -5,11 +5,13 @@ interface Props {}
 
 export const Home: React.FC<Props> = () => {
   const { loading, error, data } = useUsersQuery({
-    fetchPolicy: 'network-only',
+    // set to network-only if we are testing,
+    // otherwise the default will use the cache
+    //fetchPolicy: 'network-only',
   })
 
   if (loading) return <p>Loading...</p>
-  if (error) return <p>Error</p>
+  if (error) return <p>Unable to view users.</p>
 
   return (
     <>

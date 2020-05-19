@@ -1,0 +1,13 @@
+header {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+header a {
+  margin-right: 10px;
+}
+
+header .logged-in {
+  display: flex;
+}

@@ -4,7 +4,7 @@ import { Response } from 'express'
 
 export const createAuthToken = (user: User) => {
   return sign({ userId: user.id }, process.env.ACCESS_SECRET!, {
-    expiresIn: '15s',
+    expiresIn: '15m',
   })
 }
 
