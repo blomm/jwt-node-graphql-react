@@ -22,6 +22,7 @@ export const attachRefreshToken = (res: Response, user: User) => {
   // create a new refresh token also
   res.cookie('jid', createRefreshToken(user), {
     httpOnly: true,
+    path: '/refresh-token', // only attach the cookie when called from this path
   })
 }
 

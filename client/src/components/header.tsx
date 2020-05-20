@@ -30,7 +30,7 @@ const Header: React.FC = () => {
       <div className="user-info">
         <div>
           {!loading && data && data.me ? (
-            <>
+            <div className="logged-in">
               <div>Logged in as: {data?.me?.email}</div>
               <button
                 onClick={async () => {
@@ -49,31 +49,8 @@ const Header: React.FC = () => {
               >
                 logout
               </button>
-            </>
-          ) : null}
-          {/* {!loading && !error && data && data.me ? (
-            <div className="logged-in">
-              <div>Logged in as: {data?.me?.email}</div>
-              <button
-                onClick={async () => {
-                  try {
-                    await logout()
-                    // clears the access token on the client
-                    setAccessToken('')
-                    // reset values that might have been put into the store
-                    await client?.resetStore()
-                  } catch (error) {
-                    console.log(error)
-                  }
-                  // removes the cookie on the server side because we can't on the client
-                }}
-              >
-                Logout
-              </button>
             </div>
-          ) : (
-            <div>not logged in</div>
-          )} */}
+          ) : null}
         </div>
       </div>
     </header>
